@@ -1,0 +1,27 @@
+MODEL:
+  WEIGHTS: "COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml"
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 128
+    NUM_CLASSES: 2
+  MASK_ON: False
+  DEVICE: 'cuda:3'
+
+DATASETS:
+  TRAIN: "my_dataset_train"
+  TEST: "my_dataset_test"
+
+DATALOADER:
+  NUM_WORKERS: 50
+
+SOLVER:
+  IMS_PER_BATCH: 8
+  BASE_LR: 0.00025
+  MAX_ITER: 30000
+  STEPS: []
+
+DIRECTORY:
+  OUTPUT_DIR: "output"
+  DATA_TRAIN_DIR: 'data/preprocess/data_ver_8'
+  DATA_TEST_DIR: 'data/preprocess/data_ver_8'
+  WEIGHT_DIR: 'weight'
+  PREDICT_DIR: 'predict'
