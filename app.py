@@ -4,6 +4,14 @@ Purpose: API inference with detectron2 model
 Latest Update: 02-03-2025
 '''
 
+from flask import Flask, request, jsonify
+from PIL import Image
+import numpy as np
+import io
+import base64
+import os
+from flask_cors import CORS
+
 import gradio as gr
 import torch
 from source.predict import detectron_infer
@@ -24,6 +32,8 @@ checkpoint_path = '/workspace/competitions/Sly/detectron2_train_infer/output/mod
 # Load model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+app = Flask(__name__)
+CORS(app)
 
 def detectron_infer(img):
     '''
@@ -71,6 +81,16 @@ def detectron_infer(img):
     
     return visualized_image
 
+#################################
+def image_to_base64(image):
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(image) 
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+#################################
+
+
 def detectron_infer_video(video_path):
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml"))
@@ -116,22 +136,36 @@ def detectron_infer_video(video_path):
     out.release()
     return output_path
 
-with gr.Blocks() as demo:
-    gr.Markdown("## Detectron2 Inference")
+@app.route('/home', methods=["GET"])
+def homepage():
+   return 'Hello'
 
-    with gr.Tabs():
-        with gr.TabItem("Image Inference"):
-            img_input = gr.Image(type="numpy")
-            img_output = gr.Image()
-            img_btn = gr.Button("Infer Image")
-            img_btn.click(fn=detectron_infer, inputs=img_input, outputs=img_output)
+@app.route("/inference", methods=["POST"])
+# def infer_api():
+#    print("inference")
+#    data = request.get_json()
+#    img_data = data.get('image')
+#    img_data = img_data.split(",")[1]
+#    img_bytes = base64.b64decode(img_data)
+#    img = Image.open(io.BytesIO(img_bytes))
+   
+#    return img
 
-        with gr.TabItem("Video Inference"):
-            vid_input = gr.Video(label="Upload Video")
-            vid_output = gr.Video()
-            vid_btn = gr.Button("Infer Video")
-            vid_btn.click(fn=detectron_infer_video, inputs=vid_input, outputs=vid_output)
+def infer_api():
+    print("inference")
+    data = request.get_json()
+    img_data = data.get('image')
+    if not img_data:
+        return jsonify({"error": "No image data provided"}), 400
+    img_data = img_data.split(",")[1]  
+    img_bytes = base64.b64decode(img_data)
+    img = Image.open(io.BytesIO(img_bytes))
+    img = np.array(img)
+    result_image = detectron_infer(img)
+    result_base64 = image_to_base64(result_image)
+    print(result_base64)
+    return jsonify({"processed_image": f"data:image/jpeg;base64,{result_base64}"})
 
-# Chạy Gradio
-if __name__ == "__main__":
-    demo.launch(share=True)
+if __name__ == '__main__':
+   app.run(debug=True, host='0.0.0.0', port = 9189)
+
