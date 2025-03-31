@@ -90,6 +90,37 @@ def image_to_base64(image):
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 #################################
 
+def image_to_base64_(image):
+    _, buffer = cv2.imencode('.jpg', image)
+    return base64.b64encode(buffer).decode("utf-8")
+
+def video_frame_generator(video_bytes):
+    # Lưu video vào bộ nhớ tạm
+    video_stream = io.BytesIO(video_bytes)
+    
+    # Đọc video từ BytesIO
+    video_stream.seek(0)
+    video_array = np.frombuffer(video_stream.read(), dtype=np.uint8)
+    video_stream.release()
+    
+    cap = cv2.VideoCapture()
+    cap.open(cv2.imdecode(video_array, cv2.IMREAD_COLOR))
+    
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        # Gửi frame gốc hoặc đã xử lý
+        result_image = detectron_infer(frame)
+        result_base64 = image_to_base64_(result_image)
+        
+        # Stream từng frame về client
+        yield f'--frame\r\nContent-Type: image/jpeg\r\n\r\n{base64.b64decode(result_base64)}\r\n'
+    
+    cap.release()
+
+
 
 def detectron_infer_video(video_path):
     cfg = get_cfg()
@@ -141,16 +172,6 @@ def homepage():
    return 'Hello'
 
 @app.route("/inference", methods=["POST"])
-# def infer_api():
-#    print("inference")
-#    data = request.get_json()
-#    img_data = data.get('image')
-#    img_data = img_data.split(",")[1]
-#    img_bytes = base64.b64decode(img_data)
-#    img = Image.open(io.BytesIO(img_bytes))
-   
-#    return img
-
 def infer_api():
     print("inference")
     data = request.get_json()
@@ -166,6 +187,22 @@ def infer_api():
     print(result_base64)
     return jsonify({"processed_image": f"data:image/jpeg;base64,{result_base64}"})
 
+def read_from_webcam():
+    while True:
+        # Đọc ảnh từ class Webcam
+        image = next(webcam.get_frame())
+
+        # Nhận diện qua model YOLO
+        image = detectron_infer(image)
+
+        # Trả về cho web bằng lệnh yeild
+        yield b'Content-Type: image/jpeg\r\n\r\n' + image + b'\r\n--frame\r\n'
+
+
+@app.route("/image_feed")
+def image_feed():
+    return Response( read_from_webcam(), mimetype="multipart/x-mixed-replace; boundary=frame" )
+
 if __name__ == '__main__':
-   app.run(debug=True, host='0.0.0.0', port = 9189)
+   app.run(debug=True, host='0.0.0.0', port = 9186)
 

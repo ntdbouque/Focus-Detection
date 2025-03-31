@@ -50,8 +50,7 @@ def detectron_train():
         selective_classes: list of classes to train
         num_class: number of classes in dataset
     '''
-    
-    #ic(detectron2_cfg)
+
     clear_directory()
     ic(directory_cfg)
         
@@ -61,11 +60,8 @@ def detectron_train():
             num_images += 1
     ic(num_images)
     
-    # Register train, test dataset
     register_detectron2_dataset(img_dir=directory_cfg['DATA_TRAIN_DIR'], type='train')
-    #register_detectron2_dataset(img_dir=directory_cfg['DATA_TEST_DIR'], type='test')
     
-    # Count total epoch for training:
     iterations_per_epoch = num_images // detectron2_cfg['SOLVER']['IMS_PER_BATCH']
     total_epochs = detectron2_cfg['SOLVER']['MAX_ITER'] // iterations_per_epoch
     
@@ -83,7 +79,6 @@ def detectron_train():
 
 if __name__ == '__main__':    
     
-    # set up lai toan bo tham so 
     device = 'cuda'
     
     detectron_train(device)

@@ -1,0 +1,4 @@
+./data/*
+./temp_gradio/*
+./detectron2/*
+./flagged/*

@@ -38,8 +38,8 @@ def visualize(img, bboxes, scores, classes_name, is_save=True):
     Returns:
         img (np.array): Image with bounding boxes
     '''
-    color_map = {0: (0, 255, 0),  # Màu xanh cho lớp 0
-                1: (0, 0, 255)}  # Màu đỏ cho lớp 1
+    color_map = {0: (0, 255, 0), 
+                1: (0, 0, 255)}  
 
     for bbox, score, class_idx in zip(bboxes, scores, classes_name):
         x1, y1, x2, y2 = map(int,bbox)
@@ -100,7 +100,6 @@ def get_train_dicts(img_dir):
                 label = int(data[0])
                 center_x, center_y, bbox_width, bbox_height = map(float, data[1:])
 
-                # Chuyển đổi tọa độ từ YOLO sang Detectron2
                 x_min = int((center_x - bbox_width / 2) * width)
                 y_min = int((center_y - bbox_height / 2) * height)
                 x_max = int((center_x + bbox_width / 2) * width)
@@ -126,7 +125,6 @@ def register_detectron2_dataset(dataset_name='my_dataset', img_dir=None, type='t
     num_classes = detectron2_cfg.MODEL.ROI_HEADS.NUM_CLASSES
     thing_classes = [str(i) for i in range(num_classes)]
     
-    # REGISTER:
     DatasetCatalog.register(dataset_name, lambda: get_train_dicts(img_dir))
     MetadataCatalog.get(dataset_name).set(thing_classes=thing_classes)
     ic(dataset_name)

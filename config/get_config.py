@@ -29,7 +29,7 @@ def get_detectron2_config(yaml_path):
     cfg.DATASETS.TRAIN = (yaml_config['DATASETS']['TRAIN'],)
     cfg.DATASETS.TEST = ()
     cfg.DATALOADER.NUM_WORKERS = yaml_config['DATALOADER']['NUM_WORKERS']
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(yaml_config['MODEL']['WEIGHTS'])  # Let training initialize from model zoo
+    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(yaml_config['MODEL']['WEIGHTS']) 
     cfg.SOLVER.IMS_PER_BATCH = yaml_config['SOLVER']['IMS_PER_BATCH']
     cfg.SOLVER.BASE_LR = yaml_config['SOLVER']['BASE_LR']  
     cfg.SOLVER.MAX_ITER = yaml_config['SOLVER']['MAX_ITER']   
